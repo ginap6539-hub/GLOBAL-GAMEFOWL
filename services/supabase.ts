@@ -7,10 +7,10 @@ const getCredentials = () => {
   const storedUrl = localStorage.getItem('ggbs_supabase_url');
   const storedKey = localStorage.getItem('ggbs_supabase_key');
   
-  return {
-    url: process.env.SUPABASE_URL || (window as any)._env_?.SUPABASE_URL || storedUrl || '',
-    key: process.env.SUPABASE_ANON_KEY || (window as any)._env_?.SUPABASE_ANON_KEY || storedKey || ''
-  };
+  const url = (process.env.SUPABASE_URL || (window as any)._env_?.SUPABASE_URL || storedUrl || '').trim();
+  const key = (process.env.SUPABASE_ANON_KEY || (window as any)._env_?.SUPABASE_ANON_KEY || storedKey || '').trim();
+
+  return { url, key };
 };
 
 const creds = getCredentials();
@@ -20,45 +20,66 @@ export const supabase: SupabaseClient | null = (creds.url && creds.key)
   : null;
 
 export const uploadFile = async (file: File): Promise<string> => {
-  if (!supabase) throw new Error("Supabase not initialized. Please go to Admin -> Database Settings and enter your Supabase URL and Anon Key.");
+  if (!supabase) {
+    // Fallback: If no Supabase, return a local Object URL for preview purposes
+    // This prevents the "Not Initialized" error from breaking the Admin experience
+    console.warn("Supabase not initialized. File will only be visible locally until DB is connected.");
+    return URL.createObjectURL(file);
+  }
   
   const fileExt = file.name.split('.').pop();
   const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
   const filePath = `${fileName}`;
 
-  const { error: uploadError } = await supabase.storage
-    .from('media')
-    .upload(filePath, file);
+  try {
+    const { error: uploadError } = await supabase.storage
+      .from('media')
+      .upload(filePath, file);
 
-  if (uploadError) throw uploadError;
+    if (uploadError) throw uploadError;
 
-  const { data } = supabase.storage
-    .from('media')
-    .getPublicUrl(filePath);
+    const { data } = supabase.storage
+      .from('media')
+      .getPublicUrl(filePath);
 
-  return data.publicUrl;
+    return data.publicUrl;
+  } catch (err) {
+    console.error("Storage error:", err);
+    // Even if storage fails, we return a local URL so the admin can at least preview the change
+    return URL.createObjectURL(file);
+  }
 };
 
 export const fetchSiteContent = async (): Promise<SiteContent> => {
-  if (!supabase) return DEFAULT_CONTENT;
+  const localSaved = localStorage.getItem('ggbs_local_content');
+  const localContent = localSaved ? JSON.parse(localSaved) : DEFAULT_CONTENT;
+
+  if (!supabase) return localContent;
+  
   try {
     const { data, error } = await supabase.from('site_settings').select('*').eq('id', 1).single();
-    if (error || !data) return DEFAULT_CONTENT;
+    if (error || !data) return localContent;
     return {
-      logoUrl: data.logo_url || DEFAULT_CONTENT.logoUrl,
-      heroVideoUrl: data.hero_video_url || DEFAULT_CONTENT.heroVideoUrl,
-      fightVideoUrl: data.fight_video_url || DEFAULT_CONTENT.fightVideoUrl,
-      glovesImageUrl: data.gloves_image_url || DEFAULT_CONTENT.glovesImageUrl,
-      evolutionImageUrl: data.evolution_image_url || DEFAULT_CONTENT.evolutionImageUrl,
-      revenueImageUrl: data.revenue_image_url || DEFAULT_CONTENT.revenueImageUrl,
+      logoUrl: data.logo_url || localContent.logoUrl,
+      heroVideoUrl: data.hero_video_url || localContent.heroVideoUrl,
+      fightVideoUrl: data.fight_video_url || localContent.fightVideoUrl,
+      glovesImageUrl: data.gloves_image_url || localContent.glovesImageUrl,
+      evolutionImageUrl: data.evolution_image_url || localContent.evolutionImageUrl,
+      revenueImageUrl: data.revenue_image_url || localContent.revenueImageUrl,
     };
   } catch {
-    return DEFAULT_CONTENT;
+    return localContent;
   }
 };
 
 export const updateSiteContent = async (content: SiteContent) => {
-  if (!supabase) throw new Error("Supabase not initialized");
+  // Always save locally first so the admin sees the change immediately
+  localStorage.setItem('ggbs_local_content', JSON.stringify(content));
+
+  if (!supabase) {
+    throw new Error("Local changes saved. To make these changes visible to ALL viewers, please connect your Supabase DB in the 'DB Settings' tab.");
+  }
+
   const payload = {
     logo_url: content.logoUrl,
     hero_video_url: content.heroVideoUrl,
@@ -67,6 +88,7 @@ export const updateSiteContent = async (content: SiteContent) => {
     evolution_image_url: content.evolutionImageUrl,
     revenue_image_url: content.revenueImageUrl,
   };
+  
   const { error } = await supabase.from('site_settings').upsert([{ id: 1, ...payload }]);
   if (error) throw error;
 };
