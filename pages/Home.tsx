@@ -1,19 +1,38 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import Navbar from '../components/Navbar';
 import Hero from '../components/Hero';
 import RevealOnScroll from '../components/RevealOnScroll';
 import RevenueChart from '../components/RevenueChart';
 import { SiteContent } from '../types';
+import { submitInvestorLead } from '../services/supabase';
 
 interface HomeProps {
   content: SiteContent;
 }
 
 const Home: React.FC<HomeProps> = ({ content }) => {
+  const [formData, setFormData] = useState({ name: '', email: '', phone: '', message: '' });
+  const [submitting, setSubmitting] = useState(false);
+  const [success, setSuccess] = useState(false);
+
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      await submitInvestorLead(formData);
+      setSuccess(true);
+      setFormData({ name: '', email: '', phone: '', message: '' });
+    } catch (err) {
+      alert('Failed to submit. Please try again later.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <div className="bg-black text-white min-h-screen">
-      <Navbar />
+      <Navbar logoUrl={content.logoUrl} />
       
       <Hero videoUrl={content.heroVideoUrl} />
 
@@ -25,7 +44,7 @@ const Home: React.FC<HomeProps> = ({ content }) => {
               <img 
                 src={content.glovesImageUrl} 
                 alt="Digital Gloves" 
-                className="rounded-2xl shadow-2xl border border-white/10 group-hover:border-red-600 transition-colors duration-500"
+                className="rounded-2xl shadow-2xl border border-white/10 group-hover:border-red-600 transition-colors duration-500 w-full object-cover aspect-[4/3]"
               />
               <div className="absolute -bottom-6 -right-6 bg-red-600 p-6 rounded-2xl hidden md:block">
                 <p className="text-4xl font-oswald font-bold leading-none">FIRST</p>
@@ -139,6 +158,79 @@ const Home: React.FC<HomeProps> = ({ content }) => {
             </div>
           </div>
         </RevealOnScroll>
+      </section>
+
+      {/* Section: Investor Form */}
+      <section id="invest" className="py-24 px-6 bg-zinc-900/50">
+        <div className="max-w-4xl mx-auto">
+          <RevealOnScroll>
+            <div className="text-center mb-12">
+                <h2 className="text-4xl font-oswald font-bold text-red-600 mb-4">READY TO INVEST?</h2>
+                <p className="text-zinc-400">Join the revolution of non-lethal gamefowl boxing. Leave your details below.</p>
+            </div>
+            {success ? (
+                <div className="bg-green-600/20 border border-green-600 p-8 rounded-2xl text-center">
+                    <h3 className="text-2xl font-bold mb-2">Submission Received!</h3>
+                    <p>Thank you for your interest. Our team will contact you shortly.</p>
+                    <button onClick={() => setSuccess(false)} className="mt-4 text-zinc-400 underline uppercase text-xs font-bold">Send another message</button>
+                </div>
+            ) : (
+                <form onSubmit={handleFormSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-black p-8 md:p-12 rounded-3xl border border-white/5 shadow-2xl">
+                    <div className="space-y-2">
+                        <label className="text-xs uppercase font-bold text-zinc-500">Full Name</label>
+                        <input 
+                            required
+                            type="text" 
+                            className="w-full bg-zinc-900 border border-zinc-800 p-4 rounded-xl focus:border-red-600 outline-none"
+                            placeholder="John Doe"
+                            value={formData.name}
+                            onChange={(e) => setFormData({...formData, name: e.target.value})}
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-xs uppercase font-bold text-zinc-500">Email Address</label>
+                        <input 
+                            required
+                            type="email" 
+                            className="w-full bg-zinc-900 border border-zinc-800 p-4 rounded-xl focus:border-red-600 outline-none"
+                            placeholder="john@example.com"
+                            value={formData.email}
+                            onChange={(e) => setFormData({...formData, email: e.target.value})}
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-xs uppercase font-bold text-zinc-500">Phone / WhatsApp</label>
+                        <input 
+                            required
+                            type="text" 
+                            className="w-full bg-zinc-900 border border-zinc-800 p-4 rounded-xl focus:border-red-600 outline-none"
+                            placeholder="+63 ..."
+                            value={formData.phone}
+                            onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-xs uppercase font-bold text-zinc-500">Interest / Message</label>
+                        <input 
+                            className="w-full bg-zinc-900 border border-zinc-800 p-4 rounded-xl focus:border-red-600 outline-none"
+                            placeholder="Brief message..."
+                            value={formData.message}
+                            onChange={(e) => setFormData({...formData, message: e.target.value})}
+                        />
+                    </div>
+                    <div className="md:col-span-2 mt-4">
+                        <button 
+                            disabled={submitting}
+                            type="submit" 
+                            className="w-full bg-red-600 hover:bg-red-700 py-4 rounded-xl font-bold uppercase tracking-widest transition-all disabled:opacity-50"
+                        >
+                            {submitting ? 'Submitting...' : 'Send Investment Proposal'}
+                        </button>
+                    </div>
+                </form>
+            )}
+          </RevealOnScroll>
+        </div>
       </section>
 
       {/* Section: Contact */}
