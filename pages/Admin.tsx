@@ -45,7 +45,7 @@ const Admin: React.FC<AdminProps> = ({ onLogout, onUpdate }) => {
       setSaveStatus(`${fieldName} ready.`);
       setTimeout(() => setSaveStatus(null), 3000);
     } catch (err: any) {
-      alert(`Upload Error: ${err.message || 'Storage bucket not accessible. Ensure "media" bucket exists in Supabase Storage.'}`);
+      alert(`Upload Error: ${err.message}`);
     } finally {
       setIsUploading(null);
     }
@@ -60,11 +60,7 @@ const Admin: React.FC<AdminProps> = ({ onLogout, onUpdate }) => {
       setTimeout(() => setSaveStatus(null), 3000);
     } catch (err: any) {
       const msg = err.message || '';
-      if (msg.includes('relation') || msg.includes('not found')) {
-        alert("SQL Error: The 'site_settings' table does not exist in your Supabase database. Go to the Config tab for the Setup SQL.");
-      } else {
-        alert(`Sync Failed: ${msg}. Check your keys in the Config tab.`);
-      }
+      alert(`Sync Failed: ${msg}. Check your keys in the Engine Config tab.`);
     }
   };
 
@@ -78,7 +74,6 @@ const Admin: React.FC<AdminProps> = ({ onLogout, onUpdate }) => {
     setSaveStatus('Engine Updated.');
     setTimeout(() => setSaveStatus(null), 3000);
     if (client) {
-       // Force a reload of data with new keys
        fetchSiteContent().then(setContent);
        fetchInvestorLeads().then(setInvestors);
     }
@@ -120,32 +115,47 @@ const Admin: React.FC<AdminProps> = ({ onLogout, onUpdate }) => {
         {activeTab === 'content' ? (
           <div className="space-y-12 animate-fade-up">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+              {/* Videos */}
               <div className="bg-zinc-900/40 rounded-[3rem] border border-white/5 p-10 space-y-10 shadow-2xl">
-                <h3 className="text-xl font-oswald font-bold text-white uppercase tracking-[0.2em] border-b border-white/5 pb-4">Cinematic Content</h3>
+                <h3 className="text-xl font-oswald font-bold text-white uppercase tracking-[0.2em] border-b border-white/5 pb-4 text-red-600">Cinematic Videos</h3>
                 <div className="space-y-8">
                   <div>
                     <label className="block text-[9px] font-black uppercase text-zinc-600 mb-3 tracking-[0.3em]">Hero Background Video (MP4)</label>
                     <input type="file" accept="video/*" onChange={(e) => handleFileUpload(e, 'heroVideoUrl')} className="w-full bg-black/40 border-2 border-zinc-800 p-5 rounded-2xl text-xs file:bg-red-600 file:text-white file:border-0 file:rounded-xl file:px-6 file:py-2 file:text-[10px] file:font-black cursor-pointer"/>
-                    {isUploading === 'heroVideoUrl' && <p className="text-red-500 text-[8px] font-black mt-2 animate-pulse uppercase">Syncing to Cloud...</p>}
                   </div>
                   <div>
                     <label className="block text-[9px] font-black uppercase text-zinc-600 mb-3 tracking-[0.3em]">Fight Showcase Video (MP4)</label>
                     <input type="file" accept="video/*" onChange={(e) => handleFileUpload(e, 'fightVideoUrl')} className="w-full bg-black/40 border-2 border-zinc-800 p-5 rounded-2xl text-xs file:bg-red-600 file:text-white file:border-0 file:rounded-xl file:px-6 file:py-2 file:text-[10px] file:font-black cursor-pointer"/>
-                    {isUploading === 'fightVideoUrl' && <p className="text-red-500 text-[8px] font-black mt-2 animate-pulse uppercase">Syncing to Cloud...</p>}
                   </div>
                 </div>
               </div>
 
+              {/* Photos Row 1 */}
               <div className="bg-zinc-900/40 rounded-[3rem] border border-white/5 p-10 space-y-10 shadow-2xl">
-                <h3 className="text-xl font-oswald font-bold text-white uppercase tracking-[0.2em] border-b border-white/5 pb-4">Visual Identity</h3>
+                <h3 className="text-xl font-oswald font-bold text-white uppercase tracking-[0.2em] border-b border-white/5 pb-4 text-red-600">Visual Identity</h3>
                 <div className="space-y-8">
                   <div>
-                    <label className="block text-[9px] font-black uppercase text-zinc-600 mb-3 tracking-[0.3em]">Corporate Logo (Transparent)</label>
+                    <label className="block text-[9px] font-black uppercase text-zinc-600 mb-3 tracking-[0.3em]">Corporate Logo</label>
                     <input type="file" accept="image/*" onChange={(e) => handleFileUpload(e, 'logoUrl')} className="w-full bg-black/40 border-2 border-zinc-800 p-5 rounded-2xl text-xs file:bg-red-600 file:text-white file:border-0 file:rounded-xl file:px-6 file:py-2 file:text-[10px] file:font-black cursor-pointer"/>
                   </div>
                   <div>
-                    <label className="block text-[9px] font-black uppercase text-zinc-600 mb-3 tracking-[0.3em]">Digital Gloves Prototype Shot</label>
+                    <label className="block text-[9px] font-black uppercase text-zinc-600 mb-3 tracking-[0.3em]">Digital Gloves Image</label>
                     <input type="file" accept="image/*" onChange={(e) => handleFileUpload(e, 'glovesImageUrl')} className="w-full bg-black/40 border-2 border-zinc-800 p-5 rounded-2xl text-xs file:bg-red-600 file:text-white file:border-0 file:rounded-xl file:px-6 file:py-2 file:text-[10px] file:font-black cursor-pointer"/>
+                  </div>
+                </div>
+              </div>
+
+              {/* Photos Row 2 */}
+              <div className="bg-zinc-900/40 rounded-[3rem] border border-white/5 p-10 space-y-10 shadow-2xl lg:col-span-2">
+                <h3 className="text-xl font-oswald font-bold text-white uppercase tracking-[0.2em] border-b border-white/5 pb-4 text-red-600">Support Graphics</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div>
+                    <label className="block text-[9px] font-black uppercase text-zinc-600 mb-3 tracking-[0.3em]">Noble Evolution Image</label>
+                    <input type="file" accept="image/*" onChange={(e) => handleFileUpload(e, 'evolutionImageUrl')} className="w-full bg-black/40 border-2 border-zinc-800 p-5 rounded-2xl text-xs file:bg-red-600 file:text-white file:border-0 file:rounded-xl file:px-6 file:py-2 file:text-[10px] file:font-black cursor-pointer"/>
+                  </div>
+                  <div>
+                    <label className="block text-[9px] font-black uppercase text-zinc-600 mb-3 tracking-[0.3em]">Revenue Projection Graphic</label>
+                    <input type="file" accept="image/*" onChange={(e) => handleFileUpload(e, 'revenueImageUrl')} className="w-full bg-black/40 border-2 border-zinc-800 p-5 rounded-2xl text-xs file:bg-red-600 file:text-white file:border-0 file:rounded-xl file:px-6 file:py-2 file:text-[10px] file:font-black cursor-pointer"/>
                   </div>
                 </div>
               </div>
@@ -177,55 +187,50 @@ const Admin: React.FC<AdminProps> = ({ onLogout, onUpdate }) => {
                   <tr>
                     <th className="pb-8 px-6 text-left">Entity</th>
                     <th className="pb-8 px-6 text-left">Contact Info</th>
-                    <th className="pb-8 px-6 text-left">Investment Proposal</th>
+                    <th className="pb-8 px-6 text-left">Proposal</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-800/30">
-                  {investors.length === 0 ? (
-                    <tr><td colSpan={3} className="py-24 text-center text-zinc-700 font-black uppercase text-xs tracking-[0.5em]">No Data in Vault</td></tr>
-                  ) : (
-                    investors.map((lead) => (
-                      <tr key={lead.id} className="group hover:bg-white/5 transition-all">
-                        <td className="py-10 px-6 font-black text-white text-xl uppercase tracking-tight">{lead.name}</td>
-                        <td className="py-10 px-6">
-                           <p className="font-bold text-zinc-300 mb-1">{lead.email}</p>
-                           <p className="text-zinc-600 text-[9px] font-black tracking-widest">{lead.phone}</p>
-                        </td>
-                        <td className="py-10 px-6 text-zinc-400 text-sm italic leading-relaxed max-w-sm">{lead.message}</td>
-                      </tr>
-                    ))
-                  )}
+                  {investors.map((lead) => (
+                    <tr key={lead.id} className="group hover:bg-white/5 transition-all">
+                      <td className="py-10 px-6 font-black text-white text-xl uppercase tracking-tight">{lead.name}</td>
+                      <td className="py-10 px-6">
+                         <p className="font-bold text-zinc-300 mb-1">{lead.email}</p>
+                         <p className="text-zinc-600 text-[9px] font-black tracking-widest">{lead.phone}</p>
+                      </td>
+                      <td className="py-10 px-6 text-zinc-400 text-sm italic leading-relaxed max-w-sm">{lead.message}</td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
           </div>
         ) : (
-          /* Secure Config Tab with SQL Instructions */
           <div className="space-y-12 animate-fade-up">
             <div className="w-full bg-zinc-900/60 rounded-[4rem] border border-white/5 p-12 md:p-20 max-w-4xl mx-auto text-center shadow-3xl">
-              <h3 className="text-5xl font-oswald font-bold text-white uppercase tracking-tighter mb-6">Database Engine</h3>
+              <h3 className="text-5xl font-oswald font-bold text-white uppercase tracking-tighter mb-6">Engine Config</h3>
               <p className="text-zinc-500 mb-16 text-lg max-w-2xl mx-auto font-light leading-relaxed">
-                Enter your Supabase credentials below to activate the live synchronization engine.
+                Connect your Supabase project to enable global media updates and lead tracking.
               </p>
               
-              <div className="space-y-10 text-left bg-black/40 p-10 rounded-[3rem] border border-white/5 shadow-inner">
+              <div className="space-y-10 text-left bg-black/40 p-10 rounded-[3rem] border border-white/5">
                 <div className="group">
                   <label className="block text-[9px] font-black uppercase text-red-600 mb-4 tracking-[0.4em] ml-2">Supabase Project URL</label>
                   <input 
                     type="text" 
                     value={dbUrl}
                     onChange={(e) => setDbUrl(e.target.value)}
-                    className="w-full bg-black/60 border-2 border-zinc-800 group-focus-within:border-red-600 p-7 rounded-[2rem] outline-none text-white font-mono text-sm transition-all" 
-                    placeholder="https://abc.supabase.co"
+                    className="w-full bg-black/60 border-2 border-zinc-800 group-focus-within:border-red-600 p-7 rounded-[2rem] outline-none text-white font-mono text-sm" 
+                    placeholder="https://xyz.supabase.co"
                   />
                 </div>
                 <div className="group">
-                  <label className="block text-[9px] font-black uppercase text-red-600 mb-4 tracking-[0.4em] ml-2">Anon API Public Key</label>
+                  <label className="block text-[9px] font-black uppercase text-red-600 mb-4 tracking-[0.4em] ml-2">Public Anon Key</label>
                   <input 
                     type="password" 
                     value={dbKey}
                     onChange={(e) => setDbKey(e.target.value)}
-                    className="w-full bg-black/60 border-2 border-zinc-800 group-focus-within:border-red-600 p-7 rounded-[2rem] outline-none text-white font-mono text-sm transition-all" 
+                    className="w-full bg-black/60 border-2 border-zinc-800 group-focus-within:border-red-600 p-7 rounded-[2rem] outline-none text-white font-mono text-sm" 
                     placeholder="eyJhbGciOiJIUzI1Ni..."
                   />
                 </div>
@@ -238,26 +243,22 @@ const Admin: React.FC<AdminProps> = ({ onLogout, onUpdate }) => {
               </div>
             </div>
 
-            {/* SQL Setup Guide */}
-            <div className="w-full bg-zinc-900/40 rounded-[4rem] border border-red-600/20 p-12 md:p-20 max-w-5xl mx-auto shadow-3xl">
+            <div className="w-full bg-zinc-900/40 rounded-[4rem] border border-red-600/20 p-12 md:p-20 max-w-5xl mx-auto">
                <div className="flex flex-col md:flex-row gap-12 items-start">
                   <div className="flex-1">
-                    <h3 className="text-3xl font-oswald font-bold text-red-600 uppercase tracking-tighter mb-6">System Initialization (Required)</h3>
+                    <h3 className="text-3xl font-oswald font-bold text-red-600 uppercase tracking-tighter mb-6">Initial SQL Setup</h3>
                     <p className="text-zinc-400 mb-8 leading-relaxed">
-                      If you are seeing "Sync Failed", it means your database doesn't have the correct tables yet. 
-                      Copy the code on the right, go to your <b>Supabase SQL Editor</b>, paste it, and click <b>RUN</b>.
+                      Run this script in your <b>Supabase SQL Editor</b> to prepare your database for sync.
                     </p>
                     <ol className="space-y-4 text-xs font-black uppercase tracking-widest text-zinc-500">
-                      <li>1. Open Supabase Dashboard</li>
-                      <li>2. Click "SQL Editor" on the left</li>
-                      <li>3. Click "+ New Query"</li>
-                      <li>4. Paste the code & click Run</li>
+                      <li>1. Click "SQL Editor" in Supabase</li>
+                      <li>2. Click "+ New Query"</li>
+                      <li>3. Paste the code & click Run</li>
                     </ol>
                   </div>
                   <div className="flex-1 w-full">
                     <div className="bg-black/80 p-8 rounded-[2rem] border border-zinc-800 font-mono text-[10px] text-green-500 overflow-x-auto">
-                      <pre>{`-- INITIALIZATION SCRIPT
-CREATE TABLE IF NOT EXISTS site_settings (
+                      <pre>{`CREATE TABLE IF NOT EXISTS site_settings (
   id INT PRIMARY KEY,
   logo_url TEXT,
   hero_video_url TEXT,
