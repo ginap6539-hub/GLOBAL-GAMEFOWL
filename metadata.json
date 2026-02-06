@@ -1,0 +1,8 @@
+{
+  "name": "GGBS - Global Gamefowl Boxing Sports",
+  "description": "A professional, animated platform showcasing the revolution of non-lethal gamefowl boxing with digital boxing gloves.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
