@@ -4,18 +4,33 @@ import { SiteContent, InvestorLead } from '../types';
 import { DEFAULT_CONTENT } from '../constants';
 
 /**
- * Fetches the latest Supabase credentials from LocalStorage or Environment.
- * This ensures the admin can update keys in real-time without code changes.
+ * Robustly retrieves configuration. 
+ * Prioritizes process.env for Vercel/CI and falls back to window.localStorage for runtime admin overrides.
  */
 const getActiveConfig = () => {
-  const url = (localStorage.getItem('ggbs_supabase_url') || '').trim();
-  const key = (localStorage.getItem('ggbs_supabase_key') || '').trim();
-  return { url, key };
+  // Check environment variables first (most stable for Vercel)
+  let url = '';
+  let key = '';
+
+  try {
+    // Attempt to get from process.env if available
+    url = (typeof process !== 'undefined' ? process.env.SUPABASE_URL : '') || '';
+    key = (typeof process !== 'undefined' ? process.env.SUPABASE_ANON_KEY : '') || '';
+  } catch (e) {
+    // Silently continue
+  }
+
+  // Fallback to localStorage if we are in the browser
+  if (typeof window !== 'undefined') {
+    url = url || localStorage.getItem('ggbs_supabase_url') || '';
+    key = key || localStorage.getItem('ggbs_supabase_key') || '';
+  }
+
+  return { url: url.trim(), key: key.trim() };
 };
 
 /**
- * Returns a live instance of the Supabase Client.
- * If credentials are missing, it returns null instead of throwing an error.
+ * Dynamically creates a Supabase Client.
  */
 export const getSupabaseClient = (): SupabaseClient | null => {
   const { url, key } = getActiveConfig();
@@ -23,20 +38,25 @@ export const getSupabaseClient = (): SupabaseClient | null => {
   try {
     return createClient(url, key);
   } catch (e) {
-    console.error("Supabase Connection Failed:", e);
+    console.error("Supabase Init Error:", e);
     return null;
   }
 };
 
 /**
- * Uploads a file to the Supabase 'media' bucket and returns the Public URL.
- * Falls back to local preview URL if database is not connected.
+ * Primary export for the client instance.
+ */
+export const supabase = getSupabaseClient();
+
+/**
+ * Uploads media to Supabase storage.
+ * If DB is missing, returns a local preview URL instead of crashing.
  */
 export const uploadFile = async (file: File): Promise<string> => {
   const client = getSupabaseClient();
   
   if (!client) {
-    console.warn("Local Mode: DB not linked. Creating preview URL.");
+    console.warn("DB not initialized. Falling back to local preview.");
     return URL.createObjectURL(file);
   }
   
@@ -45,17 +65,11 @@ export const uploadFile = async (file: File): Promise<string> => {
   const filePath = `${fileName}`;
 
   try {
-    // Attempt upload to the 'media' bucket
     const { error: uploadError } = await client.storage
       .from('media')
       .upload(filePath, file, { upsert: true });
 
-    if (uploadError) {
-      if (uploadError.message.includes("not found")) {
-        throw new Error("Bucket 'media' not found. Please create a public bucket named 'media' in Supabase Storage.");
-      }
-      throw uploadError;
-    }
+    if (uploadError) throw uploadError;
 
     const { data } = client.storage
       .from('media')
@@ -63,17 +77,16 @@ export const uploadFile = async (file: File): Promise<string> => {
 
     return data.publicUrl;
   } catch (err) {
-    console.error("Upload process failed:", err);
-    // Fallback to local URL so user doesn't lose progress
+    console.error("Upload failed:", err);
     return URL.createObjectURL(file);
   }
 };
 
 /**
- * Fetches all site content (logos, videos, images) from the SQL database.
+ * Fetches site settings from the database.
  */
 export const fetchSiteContent = async (): Promise<SiteContent> => {
-  const localCache = localStorage.getItem('ggbs_local_content');
+  const localCache = typeof window !== 'undefined' ? localStorage.getItem('ggbs_local_content') : null;
   const fallback = localCache ? JSON.parse(localCache) : DEFAULT_CONTENT;
 
   const client = getSupabaseClient();
@@ -102,15 +115,16 @@ export const fetchSiteContent = async (): Promise<SiteContent> => {
 };
 
 /**
- * Saves the current configuration to the SQL database.
+ * Persists changes to the SQL database.
  */
 export const updateSiteContent = async (content: SiteContent) => {
-  // 1. Immediate local save for UI feedback
-  localStorage.setItem('ggbs_local_content', JSON.stringify(content));
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('ggbs_local_content', JSON.stringify(content));
+  }
 
   const client = getSupabaseClient();
   if (!client) {
-    throw new Error("Admin: You are currently in LOCAL MODE. Please go to the 'Connection' tab and enter your Supabase credentials to save globally.");
+    throw new Error("Supabase is not configured. Go to 'Connection' tab in Admin.");
   }
 
   const payload = {
@@ -124,25 +138,15 @@ export const updateSiteContent = async (content: SiteContent) => {
   };
   
   const { error } = await client.from('site_settings').upsert([payload]);
-  
-  if (error) {
-    console.error("Database Sync Error:", error);
-    throw new Error(`Database Error: ${error.message}. Ensure the 'site_settings' table exists in your SQL editor.`);
-  }
+  if (error) throw error;
 };
 
-/**
- * Submits an investor lead to the 'investors' table.
- */
 export const submitInvestorLead = async (lead: InvestorLead) => {
   const client = getSupabaseClient();
   if (!client) return;
   await client.from('investors').insert([lead]);
 };
 
-/**
- * Retrieves all captured leads from the database.
- */
 export const fetchInvestorLeads = async (): Promise<InvestorLead[]> => {
   const client = getSupabaseClient();
   if (!client) return [];
