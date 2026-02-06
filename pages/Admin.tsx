@@ -16,8 +16,8 @@ const Admin: React.FC<AdminProps> = ({ onLogout, onUpdate }) => {
   const [activeTab, setActiveTab] = useState<'content' | 'investors' | 'database'>('content');
   const [isConnected, setIsConnected] = useState(false);
   
-  const [dbUrl, setDbUrl] = useState(localStorage.getItem('ggbs_supabase_url') || '');
-  const [dbKey, setDbKey] = useState(localStorage.getItem('ggbs_supabase_key') || '');
+  const [dbUrl, setDbUrl] = useState(() => (typeof window !== 'undefined' ? localStorage.getItem('ggbs_supabase_url') || '' : ''));
+  const [dbKey, setDbKey] = useState(() => (typeof window !== 'undefined' ? localStorage.getItem('ggbs_supabase_key') || '' : ''));
 
   useEffect(() => {
     const loadData = async () => {
@@ -36,14 +36,14 @@ const Admin: React.FC<AdminProps> = ({ onLogout, onUpdate }) => {
 
     setIsUploading(fieldName);
     try {
-      const resultUrl = await uploadFile(file);
-      const newContent = { ...content, [fieldName]: resultUrl };
+      const publicUrl = await uploadFile(file);
+      const newContent = { ...content, [fieldName]: publicUrl };
       setContent(newContent);
       localStorage.setItem('ggbs_local_content', JSON.stringify(newContent));
-      setSaveStatus(`${fieldName} is ready to commit.`);
+      setSaveStatus(`${fieldName} uploaded.`);
       setTimeout(() => setSaveStatus(null), 3000);
     } catch (err: any) {
-      alert(`Storage Error: ${err.message || 'Check your Supabase Storage bucket settings.'}`);
+      alert(`Upload Error: ${err.message || 'Storage bucket not accessible.'}`);
     } finally {
       setIsUploading(null);
     }
@@ -57,24 +57,26 @@ const Admin: React.FC<AdminProps> = ({ onLogout, onUpdate }) => {
       setSaveStatus('DB SYNC SUCCESSFUL!');
       setTimeout(() => setSaveStatus(null), 3000);
     } catch (err: any) {
-      alert(`Sync Failed: ${err.message}. Check if your 'site_settings' table is active.`);
+      alert(`Sync Failed: ${err.message}. Ensure the 'site_settings' table exists.`);
     }
   };
 
   const saveDbSettings = () => {
-    localStorage.setItem('ggbs_supabase_url', dbUrl.trim());
-    localStorage.setItem('ggbs_supabase_key', dbKey.trim());
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('ggbs_supabase_url', dbUrl.trim());
+      localStorage.setItem('ggbs_supabase_key', dbKey.trim());
+    }
     const client = getSupabaseClient();
     setIsConnected(!!client);
-    setSaveStatus('Configuration Updated.');
+    setSaveStatus('Engine Updated.');
     setTimeout(() => setSaveStatus(null), 3000);
     if (client) setActiveTab('content');
   };
 
   if (!content) return (
     <div className="h-screen bg-black flex flex-col items-center justify-center">
-      <div className="w-12 h-12 border-t-2 border-red-600 rounded-full animate-spin mb-4"></div>
-      <div className="text-red-600 font-oswald text-xl font-bold uppercase tracking-widest animate-pulse">Syncing GGBS PRO...</div>
+      <div className="w-10 h-10 border-t-2 border-red-600 rounded-full animate-spin mb-4"></div>
+      <div className="text-red-600 font-oswald font-bold uppercase tracking-widest animate-pulse">Establishing Link...</div>
     </div>
   );
 
@@ -82,17 +84,17 @@ const Admin: React.FC<AdminProps> = ({ onLogout, onUpdate }) => {
     <div className="min-h-screen bg-[#080808] text-white p-4 md:p-12 font-inter">
       <div className="max-w-7xl mx-auto">
         
-        {/* Management Header */}
-        <div className="w-full bg-zinc-900/60 p-8 md:p-14 rounded-[4rem] border border-white/5 shadow-2xl mb-12 flex flex-col lg:flex-row items-center justify-between gap-10">
+        {/* Superior Header Control */}
+        <div className="w-full bg-zinc-900/60 p-8 md:p-14 rounded-[3rem] border border-white/5 shadow-2xl mb-12 flex flex-col lg:flex-row items-center justify-between gap-10">
           <div className="text-center lg:text-left">
-            <div className="flex items-center justify-center lg:justify-start gap-5 mb-4">
-              <h1 className="text-5xl font-oswald font-bold uppercase">GGBS <span className="text-red-600">HUB</span></h1>
-              <div className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest flex items-center gap-2 ${isConnected ? 'bg-green-600/10 text-green-500 border border-green-500/20' : 'bg-red-600/10 text-red-500 border border-red-500/20'}`}>
-                <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
-                {isConnected ? 'LIVE' : 'LOCAL'}
+            <div className="flex items-center justify-center lg:justify-start gap-5 mb-3">
+              <h1 className="text-5xl font-oswald font-bold uppercase tracking-tighter">GGBS <span className="text-red-600">PRO</span></h1>
+              <div className={`px-4 py-1.5 rounded-full text-[8px] font-black uppercase tracking-widest flex items-center gap-2 ${isConnected ? 'bg-green-600/10 text-green-500 border border-green-500/20' : 'bg-red-600/10 text-red-500 border border-red-500/20'}`}>
+                <div className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
+                {isConnected ? 'ONLINE' : 'LOCAL'}
               </div>
             </div>
-            <p className="text-zinc-600 uppercase text-[10px] tracking-[1em] font-black">Professional Command Interface</p>
+            <p className="text-zinc-600 uppercase text-[9px] tracking-[0.8em] font-black">Elite Management Console</p>
           </div>
           
           <div className="flex flex-wrap justify-center gap-3">
@@ -100,38 +102,38 @@ const Admin: React.FC<AdminProps> = ({ onLogout, onUpdate }) => {
             <button onClick={() => setActiveTab('investors')} className={`px-8 py-4 rounded-2xl text-[9px] font-black tracking-widest transition-all uppercase ${activeTab === 'investors' ? 'bg-red-600 text-white shadow-xl' : 'bg-zinc-800 text-zinc-500 hover:text-white'}`}>Leads</button>
             <button onClick={() => setActiveTab('database')} className={`px-8 py-4 rounded-2xl text-[9px] font-black tracking-widest transition-all uppercase ${activeTab === 'database' ? 'bg-red-600 text-white shadow-xl' : 'bg-zinc-800 text-zinc-500 hover:text-white'}`}>Config</button>
             <button onClick={() => { window.location.hash = '#/'; window.location.reload(); }} className="px-8 py-4 bg-white text-black rounded-2xl text-[9px] font-black tracking-widest hover:bg-red-600 hover:text-white transition-all uppercase">Site</button>
-            <button onClick={onLogout} className="px-8 py-4 bg-zinc-900 border border-zinc-800 text-red-600 rounded-2xl text-[9px] font-black tracking-widest hover:bg-red-600 hover:text-white transition-all uppercase">Exit</button>
+            <button onClick={onLogout} className="px-8 py-4 bg-zinc-900 border border-zinc-800 text-red-600 rounded-2xl text-[9px] font-black tracking-widest hover:bg-red-600 hover:text-white transition-all uppercase">Logout</button>
           </div>
         </div>
 
-        {activeTab === 'content' && (
+        {activeTab === 'content' ? (
           <div className="space-y-12 animate-fade-up">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
               <div className="bg-zinc-900/40 rounded-[3rem] border border-white/5 p-10 space-y-10 shadow-2xl">
-                <h3 className="text-xl font-oswald font-bold text-white uppercase tracking-[0.2em] mb-4">Video Assets</h3>
+                <h3 className="text-xl font-oswald font-bold text-white uppercase tracking-[0.2em] border-b border-white/5 pb-4">Cinematic Assets</h3>
                 <div className="space-y-8">
                   <div>
-                    <label className="block text-[9px] font-black uppercase text-zinc-600 mb-3 tracking-[0.3em]">Hero Master Video (MP4)</label>
+                    <label className="block text-[9px] font-black uppercase text-zinc-600 mb-3 tracking-[0.3em]">Hero Background (MP4)</label>
                     <input type="file" accept="video/*" onChange={(e) => handleFileUpload(e, 'heroVideoUrl')} className="w-full bg-black/40 border-2 border-zinc-800 p-5 rounded-2xl text-xs file:bg-red-600 file:text-white file:border-0 file:rounded-xl file:px-6 file:py-2 file:text-[10px] file:font-black cursor-pointer"/>
-                    {isUploading === 'heroVideoUrl' && <p className="text-red-500 text-[9px] font-black mt-2 animate-pulse">UPLOADING TO SUPABASE...</p>}
+                    {isUploading === 'heroVideoUrl' && <p className="text-red-500 text-[8px] font-black mt-2 animate-pulse uppercase tracking-widest">Uploading to Cloud...</p>}
                   </div>
                   <div>
-                    <label className="block text-[9px] font-black uppercase text-zinc-600 mb-3 tracking-[0.3em]">Fight Demo Video (MP4)</label>
+                    <label className="block text-[9px] font-black uppercase text-zinc-600 mb-3 tracking-[0.3em]">Fight Demo Loop (MP4)</label>
                     <input type="file" accept="video/*" onChange={(e) => handleFileUpload(e, 'fightVideoUrl')} className="w-full bg-black/40 border-2 border-zinc-800 p-5 rounded-2xl text-xs file:bg-red-600 file:text-white file:border-0 file:rounded-xl file:px-6 file:py-2 file:text-[10px] file:font-black cursor-pointer"/>
-                    {isUploading === 'fightVideoUrl' && <p className="text-red-500 text-[9px] font-black mt-2 animate-pulse">UPLOADING TO SUPABASE...</p>}
+                    {isUploading === 'fightVideoUrl' && <p className="text-red-500 text-[8px] font-black mt-2 animate-pulse uppercase tracking-widest">Uploading to Cloud...</p>}
                   </div>
                 </div>
               </div>
 
               <div className="bg-zinc-900/40 rounded-[3rem] border border-white/5 p-10 space-y-10 shadow-2xl">
-                <h3 className="text-xl font-oswald font-bold text-white uppercase tracking-[0.2em] mb-4">Graphic Assets</h3>
+                <h3 className="text-xl font-oswald font-bold text-white uppercase tracking-[0.2em] border-b border-white/5 pb-4">Visual Branding</h3>
                 <div className="space-y-8">
                   <div>
-                    <label className="block text-[9px] font-black uppercase text-zinc-600 mb-3 tracking-[0.3em]">Master Logo (PNG/JPG)</label>
+                    <label className="block text-[9px] font-black uppercase text-zinc-600 mb-3 tracking-[0.3em]">Global Logo (PNG/SVG)</label>
                     <input type="file" accept="image/*" onChange={(e) => handleFileUpload(e, 'logoUrl')} className="w-full bg-black/40 border-2 border-zinc-800 p-5 rounded-2xl text-xs file:bg-red-600 file:text-white file:border-0 file:rounded-xl file:px-6 file:py-2 file:text-[10px] file:font-black cursor-pointer"/>
                   </div>
                   <div>
-                    <label className="block text-[9px] font-black uppercase text-zinc-600 mb-3 tracking-[0.3em]">Digital Gloves Shot</label>
+                    <label className="block text-[9px] font-black uppercase text-zinc-600 mb-3 tracking-[0.3em]">Gloves Product Shot</label>
                     <input type="file" accept="image/*" onChange={(e) => handleFileUpload(e, 'glovesImageUrl')} className="w-full bg-black/40 border-2 border-zinc-800 p-5 rounded-2xl text-xs file:bg-red-600 file:text-white file:border-0 file:rounded-xl file:px-6 file:py-2 file:text-[10px] file:font-black cursor-pointer"/>
                   </div>
                 </div>
@@ -140,13 +142,13 @@ const Admin: React.FC<AdminProps> = ({ onLogout, onUpdate }) => {
 
             <div className="bg-red-600 p-12 rounded-[4rem] flex flex-col md:flex-row items-center justify-between gap-10 shadow-3xl shadow-red-600/20">
               <div className="text-center md:text-left">
-                <h4 className="text-3xl font-oswald font-bold text-white uppercase leading-none mb-3">Commit System Sync</h4>
-                <p className="text-red-100 text-[9px] font-black uppercase tracking-[0.4em]">{saveStatus || 'Database Linked'}</p>
+                <h4 className="text-4xl font-oswald font-bold text-white uppercase leading-none mb-3 tracking-tighter">Commit Master Sync</h4>
+                <p className="text-red-100 text-[9px] font-black uppercase tracking-[0.5em]">{saveStatus || 'System Engine Linked'}</p>
               </div>
               <button 
                 onClick={handleSave}
                 disabled={!!isUploading}
-                className="bg-white text-red-600 px-16 py-7 rounded-[2rem] font-black uppercase text-[10px] tracking-[0.5em] hover:bg-black hover:text-white transition-all disabled:opacity-50 shadow-2xl"
+                className="bg-white text-red-600 px-20 py-8 rounded-[2rem] font-black uppercase text-xs tracking-[0.5em] hover:bg-black hover:text-white transition-all disabled:opacity-50 shadow-2xl active:scale-95"
               >
                 {isUploading ? 'MEDIA PROCESSING...' : 'PUSH CHANGES WORLDWIDE'}
               </button>
@@ -155,21 +157,21 @@ const Admin: React.FC<AdminProps> = ({ onLogout, onUpdate }) => {
         ) : activeTab === 'investors' ? (
           <div className="w-full bg-zinc-900/40 rounded-[3rem] border border-white/5 p-12 animate-fade-up shadow-2xl">
              <div className="flex justify-between items-center mb-12 border-b border-zinc-800 pb-10">
-               <h3 className="text-3xl font-oswald font-bold text-red-600 uppercase tracking-tighter">Investment Vault</h3>
-               <span className="bg-zinc-800 text-zinc-400 px-6 py-2 rounded-full text-[9px] font-black uppercase">{investors.length} LEADS</span>
+               <h3 className="text-3xl font-oswald font-bold text-red-600 uppercase tracking-tighter">Verified Vault</h3>
+               <span className="bg-zinc-800 text-zinc-400 px-6 py-2 rounded-full text-[9px] font-black uppercase tracking-widest">{investors.length} ACTIVE LEADS</span>
              </div>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="text-zinc-600 text-[9px] font-black uppercase tracking-[0.4em]">
                   <tr>
-                    <th className="pb-8 px-6 text-left">Identity</th>
-                    <th className="pb-8 px-6 text-left">Contact Point</th>
-                    <th className="pb-8 px-6 text-left">Proposal</th>
+                    <th className="pb-8 px-6 text-left">Investor</th>
+                    <th className="pb-8 px-6 text-left">Channel</th>
+                    <th className="pb-8 px-6 text-left">Brief</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-800/30">
                   {investors.length === 0 ? (
-                    <tr><td colSpan={3} className="py-24 text-center text-zinc-700 font-black uppercase text-xs">No active leads detected</td></tr>
+                    <tr><td colSpan={3} className="py-24 text-center text-zinc-700 font-black uppercase text-xs tracking-[0.5em]">No Data Captured</td></tr>
                   ) : (
                     investors.map((lead) => (
                       <tr key={lead.id} className="group hover:bg-white/5 transition-all">
@@ -187,31 +189,31 @@ const Admin: React.FC<AdminProps> = ({ onLogout, onUpdate }) => {
             </div>
           </div>
         ) : (
-          /* Secure Database Connection Tab */
+          /* Secure Config Tab */
           <div className="w-full bg-zinc-900/60 rounded-[4rem] border border-white/5 p-12 md:p-24 animate-fade-up max-w-4xl mx-auto text-center shadow-3xl">
             <h3 className="text-5xl font-oswald font-bold text-white uppercase tracking-tighter mb-6">Engine Connection</h3>
             <p className="text-zinc-500 mb-16 text-lg max-w-2xl mx-auto font-light leading-relaxed">
-              Link your Supabase instance to enable global synchronization. Your credentials are used to securely store all media and investor leads.
+              Link your Supabase instance to enable global synchronization. This stores your uploads permanently in your professional SQL database.
             </p>
             
-            <div className="space-y-10 text-left bg-black/40 p-10 rounded-[3rem] border border-white/5">
+            <div className="space-y-10 text-left bg-black/40 p-10 rounded-[3rem] border border-white/5 shadow-inner">
               <div className="group">
-                <label className="block text-[9px] font-black uppercase text-red-600 mb-4 tracking-[0.4em] ml-2">Supabase Project URL</label>
+                <label className="block text-[9px] font-black uppercase text-red-600 mb-4 tracking-[0.4em] ml-2">Supabase API Endpoint</label>
                 <input 
                   type="text" 
                   value={dbUrl}
                   onChange={(e) => setDbUrl(e.target.value)}
-                  className="w-full bg-black/60 border-2 border-zinc-800 group-focus-within:border-red-600 p-7 rounded-[2rem] outline-none text-white font-mono text-sm transition-all" 
-                  placeholder="https://xxx.supabase.co"
+                  className="w-full bg-black/60 border-2 border-zinc-800 group-focus-within:border-red-600 p-7 rounded-[2rem] outline-none text-white font-mono text-sm transition-all shadow-inner" 
+                  placeholder="https://your-id.supabase.co"
                 />
               </div>
               <div className="group">
-                <label className="block text-[9px] font-black uppercase text-red-600 mb-4 tracking-[0.4em] ml-2">Supabase Anon Key</label>
+                <label className="block text-[9px] font-black uppercase text-red-600 mb-4 tracking-[0.4em] ml-2">Supabase Master Key</label>
                 <input 
                   type="password" 
                   value={dbKey}
                   onChange={(e) => setDbKey(e.target.value)}
-                  className="w-full bg-black/60 border-2 border-zinc-800 group-focus-within:border-red-600 p-7 rounded-[2rem] outline-none text-white font-mono text-sm transition-all" 
+                  className="w-full bg-black/60 border-2 border-zinc-800 group-focus-within:border-red-600 p-7 rounded-[2rem] outline-none text-white font-mono text-sm transition-all shadow-inner" 
                   placeholder="eyJhbGciOiJIUzI1Ni..."
                 />
               </div>
@@ -223,8 +225,8 @@ const Admin: React.FC<AdminProps> = ({ onLogout, onUpdate }) => {
               </button>
             </div>
             
-            <p className="mt-12 text-zinc-600 text-[10px] font-black uppercase tracking-[0.4em]">
-              * Security Note: Credentials are kept in your browser context.
+            <p className="mt-12 text-zinc-600 text-[9px] font-black uppercase tracking-[0.5em]">
+              * Secure Node: Credentials stored in encrypted browser context.
             </p>
           </div>
         )}
