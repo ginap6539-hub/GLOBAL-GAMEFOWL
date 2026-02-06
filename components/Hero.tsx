@@ -16,6 +16,7 @@ const Hero: React.FC<HeroProps> = ({ videoUrl }) => {
         autoPlay 
         loop 
         playsInline 
+        muted={false}
         className="absolute inset-0 w-full h-full object-cover scale-105 blur-[2px] brightness-50"
       >
         <source src={videoUrl} type="video/mp4" />

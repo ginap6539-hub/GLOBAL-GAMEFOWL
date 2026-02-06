@@ -91,6 +91,7 @@ const Home: React.FC<HomeProps> = ({ content }) => {
                 <video 
                   autoPlay 
                   loop 
+                  muted={false}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000"
                 >
                   <source src={content.fightVideoUrl} type="video/mp4" />

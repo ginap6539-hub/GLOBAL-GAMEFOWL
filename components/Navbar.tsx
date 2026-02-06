@@ -1,6 +1,5 @@
 
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { ADMIN_USERNAME, ADMIN_PASSWORD } from '../constants';
 
 interface NavbarProps {
@@ -31,10 +30,11 @@ const Navbar: React.FC<NavbarProps> = ({ logoUrl }) => {
     if (username.trim() === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
       setShowLogin(false);
       sessionStorage.setItem('ggbs_admin_auth', 'true');
-      window.location.href = window.location.origin + window.location.pathname + '#/admin';
+      // Redirect to admin hash route and refresh to update app state
+      window.location.hash = '#/admin';
       window.location.reload();
     } else {
-      alert('Invalid Credentials');
+      alert('Access Denied: Invalid Credentials');
     }
   };
 
@@ -54,7 +54,7 @@ const Navbar: React.FC<NavbarProps> = ({ logoUrl }) => {
           )}
         </div>
 
-        <div className="hidden md:flex space-x-8 text-sm font-semibold uppercase tracking-widest">
+        <div className="hidden md:flex space-x-8 text-sm font-semibold uppercase tracking-widest text-zinc-400">
           <a href="#about" className="hover:text-red-500 transition-colors">Digital Gloves</a>
           <a href="#evolution" className="hover:text-red-500 transition-colors">Noble Evolution</a>
           <a href="#revenue" className="hover:text-red-500 transition-colors">Revenue</a>
@@ -67,9 +67,9 @@ const Navbar: React.FC<NavbarProps> = ({ logoUrl }) => {
       </div>
 
       {showLogin && (
-        <div className="fixed inset-0 bg-black/95 flex items-center justify-center z-[999] px-4 backdrop-blur-md overflow-y-auto">
+        <div className="fixed inset-0 bg-black/95 z-[9999] flex items-center justify-center p-4 backdrop-blur-xl animate-fade-in">
           <div 
-            className="relative bg-zinc-900 p-10 rounded-3xl border border-red-600 shadow-[0_0_100px_rgba(220,38,38,0.4)] w-full max-w-md my-8 transform transition-all animate-fade-up" 
+            className="relative bg-zinc-900 p-10 rounded-[2.5rem] border border-red-600/50 shadow-[0_0_100px_rgba(220,38,38,0.4)] w-full max-w-md transform transition-all animate-fade-up" 
             onClick={(e) => e.stopPropagation()}
           >
             <button 
@@ -80,31 +80,34 @@ const Navbar: React.FC<NavbarProps> = ({ logoUrl }) => {
             </button>
 
             <div className="text-center mb-10">
-              <h2 className="text-4xl font-oswald font-bold text-white mb-2 uppercase tracking-tighter">Admin Portal</h2>
-              <div className="w-12 h-1 bg-red-600 mx-auto rounded-full"></div>
+              <div className="w-16 h-16 bg-red-600/10 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-red-600/20">
+                 <div className="w-8 h-8 border-t-2 border-r-2 border-red-600 rotate-45 translate-y-1"></div>
+              </div>
+              <h2 className="text-3xl font-oswald font-bold text-white uppercase tracking-tighter">Secure Login</h2>
+              <p className="text-zinc-500 text-[10px] uppercase tracking-[0.3em] font-bold mt-2">GGBS Management Interface</p>
             </div>
             
             <form onSubmit={handleLogin} className="space-y-6">
-              <div>
-                <label className="block text-[10px] uppercase text-red-500 font-bold mb-2 tracking-[0.2em]">Identification</label>
+              <div className="group">
+                <label className="block text-[10px] uppercase text-zinc-300 font-bold mb-2 tracking-widest ml-1">Administrator ID</label>
                 <input 
                   type="text" 
                   autoComplete="username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="w-full bg-black border border-zinc-700 p-4 rounded-xl focus:border-red-600 outline-none text-white transition-all text-center text-lg font-bold tracking-widest" 
-                  placeholder="USERNAME"
+                  className="w-full bg-black border-2 border-zinc-800 group-focus-within:border-red-600 p-5 rounded-2xl outline-none text-white transition-all text-center text-xl font-bold tracking-widest placeholder:text-zinc-800" 
+                  placeholder="ID NUMBER"
                   autoFocus
                 />
               </div>
-              <div>
-                <label className="block text-[10px] uppercase text-red-500 font-bold mb-2 tracking-[0.2em]">Security Pass</label>
+              <div className="group">
+                <label className="block text-[10px] uppercase text-zinc-300 font-bold mb-2 tracking-widest ml-1">Security Access Key</label>
                 <input 
                   type="password" 
                   autoComplete="current-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-black border border-zinc-700 p-4 rounded-xl focus:border-red-600 outline-none text-white transition-all text-center text-lg tracking-widest" 
+                  className="w-full bg-black border-2 border-zinc-800 group-focus-within:border-red-600 p-5 rounded-2xl outline-none text-white transition-all text-center text-xl tracking-[0.5em] placeholder:tracking-widest placeholder:text-zinc-800" 
                   placeholder="••••••••"
                 />
               </div>
@@ -112,16 +115,16 @@ const Navbar: React.FC<NavbarProps> = ({ logoUrl }) => {
               <div className="pt-4">
                 <button 
                   type="submit"
-                  className="w-full bg-red-600 hover:bg-red-700 p-5 rounded-2xl font-bold transition-all transform hover:scale-[1.02] active:scale-95 shadow-xl shadow-red-600/30 text-white uppercase tracking-widest text-sm"
+                  className="w-full bg-red-600 hover:bg-red-700 p-5 rounded-2xl font-bold transition-all transform active:scale-95 shadow-2xl shadow-red-600/30 text-white uppercase tracking-widest text-sm"
                 >
-                  Authorize Access
+                  Verify & Enter
                 </button>
                 <button 
                   type="button"
                   onClick={() => setShowLogin(false)}
-                  className="w-full text-zinc-500 text-xs mt-6 hover:text-zinc-300 transition-colors uppercase font-bold tracking-widest"
+                  className="w-full text-zinc-600 text-[10px] mt-6 hover:text-zinc-400 transition-colors uppercase font-black tracking-[0.2em]"
                 >
-                  Return to Site
+                  Terminate Connection
                 </button>
               </div>
             </form>
