@@ -21,6 +21,7 @@ const Navbar: React.FC<NavbarProps> = ({ logoUrl }) => {
       setClickCount(0);
     }
 
+    // Reset counter if no click for 3 seconds
     const timer = setTimeout(() => setClickCount(0), 3000);
     return () => clearTimeout(timer);
   };
@@ -30,11 +31,10 @@ const Navbar: React.FC<NavbarProps> = ({ logoUrl }) => {
     if (username.trim() === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
       setShowLogin(false);
       sessionStorage.setItem('ggbs_admin_auth', 'true');
-      // Redirect to admin hash route and refresh to update app state
       window.location.hash = '#/admin';
       window.location.reload();
     } else {
-      alert('Access Denied: Invalid Credentials');
+      alert('Security Verification Failed.');
     }
   };
 
@@ -67,64 +67,64 @@ const Navbar: React.FC<NavbarProps> = ({ logoUrl }) => {
       </div>
 
       {showLogin && (
-        <div className="fixed inset-0 bg-black/95 z-[9999] flex items-center justify-center p-4 backdrop-blur-xl animate-fade-in">
+        <div className="fixed inset-0 bg-black/98 z-[99999] flex flex-col items-center justify-center p-6 backdrop-blur-2xl animate-fade-in overflow-hidden">
           <div 
-            className="relative bg-zinc-900 p-10 rounded-[2.5rem] border border-red-600/50 shadow-[0_0_100px_rgba(220,38,38,0.4)] w-full max-w-md transform transition-all animate-fade-up" 
+            className="w-full max-w-md bg-zinc-900/90 p-12 rounded-[3rem] border border-red-600/30 shadow-[0_0_150px_rgba(220,38,38,0.3)] relative animate-fade-up" 
             onClick={(e) => e.stopPropagation()}
           >
             <button 
               onClick={() => setShowLogin(false)}
-              className="absolute top-6 right-6 text-zinc-500 hover:text-white transition-colors text-3xl font-light"
+              className="absolute top-8 right-8 text-zinc-600 hover:text-white transition-colors text-4xl leading-none"
             >
               &times;
             </button>
 
-            <div className="text-center mb-10">
-              <div className="w-16 h-16 bg-red-600/10 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-red-600/20">
-                 <div className="w-8 h-8 border-t-2 border-r-2 border-red-600 rotate-45 translate-y-1"></div>
+            <div className="text-center mb-12">
+              <div className="w-20 h-20 bg-red-600/10 rounded-3xl flex items-center justify-center mx-auto mb-6 border border-red-600/20 shadow-inner">
+                 <div className="w-10 h-10 border-t-4 border-r-4 border-red-600 rotate-45 translate-y-1"></div>
               </div>
-              <h2 className="text-3xl font-oswald font-bold text-white uppercase tracking-tighter">Secure Login</h2>
-              <p className="text-zinc-500 text-[10px] uppercase tracking-[0.3em] font-bold mt-2">GGBS Management Interface</p>
+              <h2 className="text-4xl font-oswald font-bold text-white uppercase tracking-tighter">Command Login</h2>
+              <div className="w-12 h-1 bg-red-600 mx-auto rounded-full mt-3"></div>
             </div>
             
-            <form onSubmit={handleLogin} className="space-y-6">
-              <div className="group">
-                <label className="block text-[10px] uppercase text-zinc-300 font-bold mb-2 tracking-widest ml-1">Administrator ID</label>
+            <form onSubmit={handleLogin} className="space-y-8">
+              <div>
+                <label className="block text-[10px] uppercase text-zinc-500 font-black mb-3 tracking-[0.3em] text-center">Identity Signature</label>
                 <input 
                   type="text" 
                   autoComplete="username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="w-full bg-black border-2 border-zinc-800 group-focus-within:border-red-600 p-5 rounded-2xl outline-none text-white transition-all text-center text-xl font-bold tracking-widest placeholder:text-zinc-800" 
-                  placeholder="ID NUMBER"
+                  className="w-full bg-black border-2 border-zinc-800 focus:border-red-600 p-5 rounded-2xl outline-none text-white transition-all text-center text-xl font-bold tracking-widest placeholder:text-zinc-800" 
+                  placeholder="USER ID"
                   autoFocus
                 />
               </div>
-              <div className="group">
-                <label className="block text-[10px] uppercase text-zinc-300 font-bold mb-2 tracking-widest ml-1">Security Access Key</label>
+              <div>
+                <label className="block text-[10px] uppercase text-zinc-500 font-black mb-3 tracking-[0.3em] text-center">Access Sequence</label>
                 <input 
                   type="password" 
                   autoComplete="current-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-black border-2 border-zinc-800 group-focus-within:border-red-600 p-5 rounded-2xl outline-none text-white transition-all text-center text-xl tracking-[0.5em] placeholder:tracking-widest placeholder:text-zinc-800" 
+                  className="w-full bg-black border-2 border-zinc-800 focus:border-red-600 p-5 rounded-2xl outline-none text-white transition-all text-center text-xl tracking-[0.8em] placeholder:tracking-widest placeholder:text-zinc-800" 
                   placeholder="••••••••"
                 />
               </div>
               
-              <div className="pt-4">
+              <div className="pt-6">
                 <button 
                   type="submit"
-                  className="w-full bg-red-600 hover:bg-red-700 p-5 rounded-2xl font-bold transition-all transform active:scale-95 shadow-2xl shadow-red-600/30 text-white uppercase tracking-widest text-sm"
+                  className="w-full bg-red-600 hover:bg-red-700 p-6 rounded-[2rem] font-black transition-all transform active:scale-95 shadow-2xl shadow-red-600/40 text-white uppercase tracking-[0.4em] text-xs"
                 >
-                  Verify & Enter
+                  Authorize Entry
                 </button>
                 <button 
                   type="button"
                   onClick={() => setShowLogin(false)}
-                  className="w-full text-zinc-600 text-[10px] mt-6 hover:text-zinc-400 transition-colors uppercase font-black tracking-[0.2em]"
+                  className="w-full text-zinc-700 text-[10px] mt-8 hover:text-zinc-500 transition-colors uppercase font-black tracking-[0.2em]"
                 >
-                  Terminate Connection
+                  Exit Control Interface
                 </button>
               </div>
             </form>

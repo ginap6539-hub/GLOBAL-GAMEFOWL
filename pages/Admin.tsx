@@ -33,11 +33,17 @@ const Admin: React.FC<AdminProps> = ({ onLogout, onUpdate }) => {
     const file = e.target.files?.[0];
     if (!file || !content) return;
 
+    if (!supabase) {
+      alert("Database engine is not connected. Please go to the 'DB Settings' tab first.");
+      setActiveTab('database');
+      return;
+    }
+
     setIsUploading(fieldName);
     try {
       const publicUrl = await uploadFile(file);
       setContent({ ...content, [fieldName]: publicUrl });
-      setSaveStatus(`${fieldName} uploaded! Remember to sync.`);
+      setSaveStatus(`${fieldName} uploaded!`);
       setTimeout(() => setSaveStatus(null), 3000);
     } catch (err) {
       alert(`Upload failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
@@ -51,7 +57,7 @@ const Admin: React.FC<AdminProps> = ({ onLogout, onUpdate }) => {
     try {
       await updateSiteContent(content);
       onUpdate();
-      setSaveStatus('Global database synced successfully!');
+      setSaveStatus('Global database synchronized!');
       setTimeout(() => setSaveStatus(null), 3000);
     } catch (err) {
       alert('Sync Error: ' + (err as any).message);
@@ -61,7 +67,7 @@ const Admin: React.FC<AdminProps> = ({ onLogout, onUpdate }) => {
   const saveDbSettings = () => {
     localStorage.setItem('ggbs_supabase_url', dbUrl);
     localStorage.setItem('ggbs_supabase_key', dbKey);
-    alert('Settings saved. Refreshing to apply connection...');
+    alert('Database keys saved. Restarting connection...');
     window.location.reload();
   };
 
@@ -70,125 +76,135 @@ const Admin: React.FC<AdminProps> = ({ onLogout, onUpdate }) => {
     window.location.reload();
   };
 
-  if (!content) return <div className="h-screen bg-black flex items-center justify-center text-red-600 font-oswald text-2xl font-bold uppercase animate-pulse">Initializing Command Center...</div>;
+  if (!content) return (
+    <div className="h-screen bg-black flex flex-col items-center justify-center space-y-4">
+      <div className="w-16 h-16 border-4 border-red-600 border-t-transparent rounded-full animate-spin"></div>
+      <div className="text-red-600 font-oswald text-2xl font-bold uppercase animate-pulse tracking-widest">Waking Console...</div>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white p-4 md:p-8 font-inter">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="flex flex-col lg:flex-row justify-between items-center mb-12 gap-6 bg-zinc-900/50 p-6 md:p-10 rounded-[2.5rem] border border-white/5">
+    <div className="min-h-screen bg-zinc-950 text-white p-4 md:p-10 font-inter">
+      <div className="max-w-7xl mx-auto">
+        {/* Navigation Bar */}
+        <div className="flex flex-col lg:flex-row justify-between items-center mb-16 gap-8 bg-zinc-900 p-8 rounded-[3rem] border border-white/5 shadow-2xl">
           <div className="text-center lg:text-left">
-            <h1 className="text-3xl md:text-5xl font-oswald font-bold tracking-tight">GGBS <span className="text-red-600">COMMAND</span></h1>
-            <p className="text-zinc-500 uppercase text-[10px] tracking-[0.5em] font-black mt-2">Central Management Console v2.0</p>
+            <h1 className="text-3xl md:text-5xl font-oswald font-bold tracking-tight">GGBS <span className="text-red-600">MASTER</span></h1>
+            <p className="text-zinc-600 uppercase text-[10px] tracking-[0.6em] font-black mt-2">Central Ops Console v2.1</p>
           </div>
-          <div className="flex flex-wrap justify-center gap-2">
+          <div className="flex flex-wrap justify-center gap-3">
             <button 
               onClick={() => setActiveTab('content')}
-              className={`px-5 py-3 rounded-2xl text-[10px] font-black tracking-widest transition-all uppercase ${activeTab === 'content' ? 'bg-red-600 text-white shadow-xl shadow-red-600/20' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'}`}
+              className={`px-6 py-4 rounded-2xl text-[10px] font-black tracking-widest transition-all uppercase ${activeTab === 'content' ? 'bg-red-600 text-white shadow-xl shadow-red-600/30' : 'bg-zinc-800 text-zinc-400 hover:text-white'}`}
             >
-              Master Content
+              Control Center
             </button>
             <button 
               onClick={() => setActiveTab('investors')}
-              className={`px-5 py-3 rounded-2xl text-[10px] font-black tracking-widest transition-all uppercase ${activeTab === 'investors' ? 'bg-red-600 text-white shadow-xl shadow-red-600/20' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'}`}
+              className={`px-6 py-4 rounded-2xl text-[10px] font-black tracking-widest transition-all uppercase ${activeTab === 'investors' ? 'bg-red-600 text-white shadow-xl shadow-red-600/30' : 'bg-zinc-800 text-zinc-400 hover:text-white'}`}
             >
               Leads ({investors.length})
             </button>
             <button 
               onClick={() => setActiveTab('database')}
-              className={`px-5 py-3 rounded-2xl text-[10px] font-black tracking-widest transition-all uppercase ${activeTab === 'database' ? 'bg-red-600 text-white shadow-xl shadow-red-600/20' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'}`}
+              className={`px-6 py-4 rounded-2xl text-[10px] font-black tracking-widest transition-all uppercase ${activeTab === 'database' ? 'bg-red-600 text-white shadow-xl shadow-red-600/30' : 'bg-zinc-800 text-zinc-400 hover:text-white'}`}
             >
               DB Settings
             </button>
-            <button 
-              onClick={onLogout}
-              className="px-5 py-3 bg-zinc-900 border border-zinc-800 text-zinc-500 rounded-2xl text-[10px] font-black tracking-widest hover:text-white transition-all uppercase"
-            >
-              Logout
-            </button>
+            <div className="w-px h-12 bg-zinc-800 mx-2 hidden md:block"></div>
             <button 
               onClick={handleBackToSite}
-              className="px-5 py-3 bg-white text-black rounded-2xl text-[10px] font-black tracking-widest hover:bg-red-600 hover:text-white transition-all uppercase"
+              className="px-6 py-4 bg-white text-black rounded-2xl text-[10px] font-black tracking-widest hover:bg-zinc-200 transition-all uppercase"
             >
-              View Live Site
+              Live Site
+            </button>
+            <button 
+              onClick={onLogout}
+              className="px-6 py-4 bg-zinc-800 text-red-500 rounded-2xl text-[10px] font-black tracking-widest hover:bg-red-600 hover:text-white transition-all uppercase"
+            >
+              Logout
             </button>
           </div>
         </div>
 
+        {/* Global Connection Warning */}
         {!supabase && activeTab !== 'database' && (
-          <div className="bg-red-600/10 border border-red-600/50 p-6 rounded-2xl mb-8 flex items-center justify-between">
-            <p className="text-red-500 font-bold text-sm">CRITICAL: Database connection not established. Uploads will fail.</p>
-            <button onClick={() => setActiveTab('database')} className="bg-red-600 text-white px-4 py-2 rounded-xl text-xs font-bold">Fix Connection Now</button>
+          <div className="bg-red-600/10 border-2 border-red-600 p-8 rounded-[2.5rem] mb-12 flex flex-col md:flex-row items-center justify-between gap-6 animate-pulse">
+            <div>
+              <h3 className="text-xl font-bold text-red-500 uppercase mb-1">Database Engine Offline</h3>
+              <p className="text-red-500/80 text-sm font-medium">To enable global updates and file uploads, you must configure your Supabase keys.</p>
+            </div>
+            <button onClick={() => setActiveTab('database')} className="bg-red-600 text-white px-10 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap">Connect Database Now</button>
           </div>
         )}
 
         {activeTab === 'content' && (
-          <div className="space-y-8 animate-fade-up">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Media Section */}
-              <div className="bg-zinc-900 rounded-[2.5rem] border border-white/5 p-8 md:p-12 space-y-8">
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="w-12 h-12 rounded-2xl bg-red-600/10 flex items-center justify-center border border-red-600/20">
-                     <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+          <div className="space-y-10 animate-fade-up">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+              {/* Media Control Section */}
+              <div className="bg-zinc-900 rounded-[3rem] border border-white/5 p-12 space-y-10">
+                <div className="flex items-center gap-6">
+                  <div className="w-16 h-16 rounded-[1.5rem] bg-red-600/10 flex items-center justify-center border border-red-600/20">
+                     <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
                   </div>
-                  <h3 className="text-xl font-oswald font-bold text-white uppercase tracking-widest">Cinema Controls</h3>
+                  <h3 className="text-2xl font-oswald font-bold text-white uppercase tracking-widest">Video Engine</h3>
                 </div>
                 
-                <div className="space-y-8">
+                <div className="space-y-10">
                   <div className="group">
-                    <label className="block text-[10px] font-black uppercase text-zinc-500 mb-3 tracking-[0.2em] group-hover:text-red-500 transition-colors">Hero Master Video (MP4)</label>
+                    <label className="block text-[10px] font-black uppercase text-zinc-500 mb-4 tracking-[0.3em] group-hover:text-red-500 transition-colors">Main Hero Cinema (MP4 Upload)</label>
                     <div className="relative">
                       <input 
                         type="file" 
-                        accept="video/*,audio/*"
+                        accept="video/*"
                         onChange={(e) => handleFileUpload(e, 'heroVideoUrl')}
-                        className="w-full bg-black border-2 border-zinc-800 p-4 rounded-2xl text-xs file:mr-4 file:py-2 file:px-6 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-red-600 file:text-white hover:file:bg-red-700 cursor-pointer"
+                        className="w-full bg-black border-2 border-zinc-800 p-6 rounded-3xl text-sm file:mr-6 file:py-3 file:px-8 file:rounded-2xl file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-red-600 file:text-white cursor-pointer"
                       />
-                      {isUploading === 'heroVideoUrl' && <div className="absolute inset-0 bg-black/80 rounded-2xl flex items-center justify-center text-red-600 font-bold text-xs tracking-widest animate-pulse">UPLOADING...</div>}
+                      {isUploading === 'heroVideoUrl' && <div className="absolute inset-0 bg-black/90 rounded-3xl flex items-center justify-center text-red-600 font-bold tracking-widest animate-pulse">UPLOADING MEDIA...</div>}
                     </div>
                   </div>
 
                   <div className="group">
-                    <label className="block text-[10px] font-black uppercase text-zinc-500 mb-3 tracking-[0.2em] group-hover:text-red-500 transition-colors">Fight Demo Video (MP4)</label>
+                    <label className="block text-[10px] font-black uppercase text-zinc-500 mb-4 tracking-[0.3em] group-hover:text-red-500 transition-colors">Fight Demo Channel (MP4 Upload)</label>
                     <div className="relative">
                       <input 
                         type="file" 
                         accept="video/*"
                         onChange={(e) => handleFileUpload(e, 'fightVideoUrl')}
-                        className="w-full bg-black border-2 border-zinc-800 p-4 rounded-2xl text-xs file:mr-4 file:py-2 file:px-6 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-red-600 file:text-white hover:file:bg-red-700 cursor-pointer"
+                        className="w-full bg-black border-2 border-zinc-800 p-6 rounded-3xl text-sm file:mr-6 file:py-3 file:px-8 file:rounded-2xl file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-red-600 file:text-white cursor-pointer"
                       />
-                      {isUploading === 'fightVideoUrl' && <div className="absolute inset-0 bg-black/80 rounded-2xl flex items-center justify-center text-red-600 font-bold text-xs tracking-widest animate-pulse">UPLOADING...</div>}
+                      {isUploading === 'fightVideoUrl' && <div className="absolute inset-0 bg-black/90 rounded-3xl flex items-center justify-center text-red-600 font-bold tracking-widest animate-pulse">UPLOADING MEDIA...</div>}
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Graphics Section */}
-              <div className="bg-zinc-900 rounded-[2.5rem] border border-white/5 p-8 md:p-12 space-y-8">
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="w-12 h-12 rounded-2xl bg-red-600/10 flex items-center justify-center border border-red-600/20">
-                     <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+              {/* Brand Control Section */}
+              <div className="bg-zinc-900 rounded-[3rem] border border-white/5 p-12 space-y-10">
+                <div className="flex items-center gap-6">
+                  <div className="w-16 h-16 rounded-[1.5rem] bg-red-600/10 flex items-center justify-center border border-red-600/20">
+                     <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                   </div>
-                  <h3 className="text-xl font-oswald font-bold text-white uppercase tracking-widest">Graphics Engine</h3>
+                  <h3 className="text-2xl font-oswald font-bold text-white uppercase tracking-widest">Brand Graphics</h3>
                 </div>
                 
-                <div className="space-y-8">
+                <div className="space-y-10">
                   <div>
-                    <label className="block text-[10px] font-black uppercase text-zinc-500 mb-3 tracking-[0.2em]">Primary Logo</label>
+                    <label className="block text-[10px] font-black uppercase text-zinc-500 mb-4 tracking-[0.3em]">Master Logo (Replace GGBS Text)</label>
                     <input 
                       type="file" 
                       accept="image/*"
                       onChange={(e) => handleFileUpload(e, 'logoUrl')}
-                      className="w-full bg-black border-2 border-zinc-800 p-4 rounded-2xl text-xs file:mr-4 file:py-2 file:px-6 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-red-600 file:text-white cursor-pointer"
+                      className="w-full bg-black border-2 border-zinc-800 p-6 rounded-3xl text-sm file:mr-6 file:py-3 file:px-8 file:rounded-2xl file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-red-600 file:text-white cursor-pointer"
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-black uppercase text-zinc-500 mb-3 tracking-[0.2em]">Gloves Product Shot</label>
+                    <label className="block text-[10px] font-black uppercase text-zinc-500 mb-4 tracking-[0.3em]">Digital Gloves Product Image</label>
                     <input 
                       type="file" 
                       accept="image/*"
                       onChange={(e) => handleFileUpload(e, 'glovesImageUrl')}
-                      className="w-full bg-black border-2 border-zinc-800 p-4 rounded-2xl text-xs file:mr-4 file:py-2 file:px-6 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-red-600 file:text-white cursor-pointer"
+                      className="w-full bg-black border-2 border-zinc-800 p-6 rounded-3xl text-sm file:mr-6 file:py-3 file:px-8 file:rounded-2xl file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-red-600 file:text-white cursor-pointer"
                     />
                   </div>
                 </div>
@@ -196,44 +212,49 @@ const Admin: React.FC<AdminProps> = ({ onLogout, onUpdate }) => {
             </div>
 
             {/* Global Sync Action */}
-            <div className="bg-red-600/90 p-10 rounded-[2.5rem] flex flex-col md:flex-row items-center justify-between gap-8 shadow-2xl shadow-red-600/20 transform transition-all hover:scale-[1.01]">
+            <div className="bg-red-600 p-12 rounded-[4rem] flex flex-col md:flex-row items-center justify-between gap-10 shadow-3xl shadow-red-600/30">
               <div className="text-center md:text-left">
-                <h4 className="text-2xl font-oswald font-bold text-white uppercase leading-none mb-2">Push Changes Globally</h4>
-                <p className="text-red-100 text-[10px] font-bold uppercase tracking-[0.2em]">Current Status: {saveStatus || 'Ready for Sync'}</p>
+                <h4 className="text-3xl font-oswald font-bold text-white uppercase leading-none mb-3">Commit Global Sync</h4>
+                <p className="text-red-100 text-[10px] font-bold uppercase tracking-[0.3em]">Status: {saveStatus || 'Awaiting Master Command'}</p>
               </div>
               <button 
                 onClick={handleSave}
                 disabled={!!isUploading || !supabase}
-                className="bg-white text-red-600 px-16 py-6 rounded-[2rem] font-black uppercase text-xs tracking-[0.3em] hover:bg-black hover:text-white transition-all transform active:scale-95 disabled:opacity-50"
+                className="bg-white text-red-600 px-20 py-8 rounded-[2.5rem] font-black uppercase text-xs tracking-[0.5em] hover:bg-black hover:text-white transition-all transform active:scale-95 disabled:opacity-50"
               >
-                {isUploading ? 'MEDIA PROCESSING...' : 'COMMIT MASTER SYNC'}
+                {isUploading ? 'MEDIA PROCESSING...' : 'DEPLOY CHANGES'}
               </button>
             </div>
           </div>
         ) : activeTab === 'investors' ? (
-          <div className="bg-zinc-900 rounded-[2.5rem] border border-white/5 p-8 md:p-12 animate-fade-up">
-            <h3 className="text-3xl font-oswald font-bold text-red-600 uppercase mb-10 tracking-tighter">Verified Leads</h3>
+          <div className="bg-zinc-900 rounded-[3rem] border border-white/5 p-12 animate-fade-up">
+             <div className="flex justify-between items-center mb-12">
+               <h3 className="text-4xl font-oswald font-bold text-red-600 uppercase tracking-tighter">Secure Leads Vault</h3>
+               <span className="bg-red-600 text-white px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">{investors.length} INVESTORS</span>
+             </div>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-zinc-800 text-zinc-500 text-[10px] font-black uppercase tracking-widest">
-                    <th className="pb-6 px-4 text-left">Timestamp</th>
-                    <th className="pb-6 px-4 text-left">Identity</th>
-                    <th className="pb-6 px-4 text-left">Proposal Brief</th>
+                  <tr className="border-b border-zinc-800 text-zinc-600 text-[10px] font-black uppercase tracking-widest">
+                    <th className="pb-8 px-6 text-left">Time Log</th>
+                    <th className="pb-8 px-6 text-left">Investor Entity</th>
+                    <th className="pb-8 px-6 text-left">Communication Channel</th>
+                    <th className="pb-8 px-6 text-left">Proposal Brief</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-800/50">
                   {investors.length === 0 ? (
-                    <tr><td colSpan={3} className="py-20 text-center text-zinc-600 font-black uppercase tracking-widest">Zero leads captured in secure vault</td></tr>
+                    <tr><td colSpan={4} className="py-32 text-center text-zinc-700 font-black uppercase tracking-[0.4em]">Vault is currently empty</td></tr>
                   ) : (
                     investors.map((lead) => (
                       <tr key={lead.id} className="group hover:bg-white/5 transition-all">
-                        <td className="py-8 px-4 text-xs font-mono text-zinc-500">{new Date(lead.created_at!).toLocaleString()}</td>
-                        <td className="py-8 px-4">
-                          <p className="font-black text-white group-hover:text-red-500 transition-colors uppercase">{lead.name}</p>
-                          <p className="text-zinc-500 text-[10px] font-bold mt-1">{lead.email} | PH: {lead.phone}</p>
+                        <td className="py-10 px-6 text-xs font-mono text-zinc-500 whitespace-nowrap">{new Date(lead.created_at!).toLocaleString()}</td>
+                        <td className="py-10 px-6 font-black text-white group-hover:text-red-500 transition-colors uppercase text-lg">{lead.name}</td>
+                        <td className="py-10 px-6">
+                          <p className="font-bold text-sm">{lead.email}</p>
+                          <p className="text-zinc-500 text-[10px] font-black mt-2 tracking-widest">PH: {lead.phone}</p>
                         </td>
-                        <td className="py-8 px-4 text-zinc-400 text-sm italic max-w-sm line-clamp-2">{lead.message}</td>
+                        <td className="py-10 px-6 text-zinc-400 text-sm italic leading-relaxed">{lead.message}</td>
                       </tr>
                     ))
                   )}
@@ -243,46 +264,46 @@ const Admin: React.FC<AdminProps> = ({ onLogout, onUpdate }) => {
           </div>
         ) : (
           /* Database Settings Tab */
-          <div className="bg-zinc-900 rounded-[2.5rem] border border-white/5 p-8 md:p-16 animate-fade-up max-w-3xl mx-auto text-center">
-            <div className="w-20 h-20 bg-red-600/10 rounded-3xl flex items-center justify-center mx-auto mb-8 border border-red-600/20">
-               <svg className="w-10 h-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path></svg>
+          <div className="bg-zinc-900 rounded-[4rem] border border-white/5 p-12 md:p-24 animate-fade-up max-w-4xl mx-auto text-center">
+            <div className="w-24 h-24 bg-red-600/10 rounded-[2rem] flex items-center justify-center mx-auto mb-10 border border-red-600/20 shadow-2xl">
+               <svg className="w-12 h-12 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path></svg>
             </div>
-            <h3 className="text-4xl font-oswald font-bold text-white uppercase tracking-tighter mb-4">Database Connection</h3>
-            <p className="text-zinc-500 mb-12 text-sm leading-relaxed max-w-md mx-auto">
-              To make your changes visible to everyone globally, enter your Supabase connection details below. These are stored locally in your browser for security.
+            <h3 className="text-5xl font-oswald font-bold text-white uppercase tracking-tighter mb-6">Database Connectivity</h3>
+            <p className="text-zinc-500 mb-16 text-lg leading-relaxed max-w-2xl mx-auto font-light">
+              To allow all viewers globally to see your video and image changes, you must link your dedicated Supabase project. These keys are stored in your browser's secure memory.
             </p>
             
-            <div className="space-y-6 text-left">
-              <div>
-                <label className="block text-[10px] font-black uppercase text-red-600 mb-2 tracking-widest ml-1">Supabase URL</label>
+            <div className="space-y-10 text-left">
+              <div className="group">
+                <label className="block text-[10px] font-black uppercase text-red-600 mb-4 tracking-[0.3em] ml-2">Supabase Project URL</label>
                 <input 
                   type="text" 
                   value={dbUrl}
                   onChange={(e) => setDbUrl(e.target.value)}
-                  className="w-full bg-black border-2 border-zinc-800 p-5 rounded-2xl focus:border-red-600 outline-none text-white font-mono text-xs" 
-                  placeholder="https://your-project.supabase.co"
+                  className="w-full bg-black border-2 border-zinc-800 group-focus-within:border-red-600 p-8 rounded-3xl outline-none text-white font-mono text-sm shadow-inner transition-all" 
+                  placeholder="https://abc...supabase.co"
                 />
               </div>
-              <div>
-                <label className="block text-[10px] font-black uppercase text-red-600 mb-2 tracking-widest ml-1">Supabase Anon Key</label>
+              <div className="group">
+                <label className="block text-[10px] font-black uppercase text-red-600 mb-4 tracking-[0.3em] ml-2">Supabase Service Key (Anon)</label>
                 <input 
                   type="password" 
                   value={dbKey}
                   onChange={(e) => setDbKey(e.target.value)}
-                  className="w-full bg-black border-2 border-zinc-800 p-5 rounded-2xl focus:border-red-600 outline-none text-white font-mono text-xs" 
+                  className="w-full bg-black border-2 border-zinc-800 group-focus-within:border-red-600 p-8 rounded-3xl outline-none text-white font-mono text-sm shadow-inner transition-all" 
                   placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
                 />
               </div>
               <button 
                 onClick={saveDbSettings}
-                className="w-full bg-white text-black p-6 rounded-[2rem] font-black uppercase text-xs tracking-[0.4em] hover:bg-red-600 hover:text-white transition-all transform active:scale-95 shadow-2xl"
+                className="w-full bg-white text-black p-8 rounded-[3rem] font-black uppercase text-xs tracking-[0.6em] hover:bg-red-600 hover:text-white transition-all transform active:scale-95 shadow-3xl shadow-black/50 mt-4"
               >
-                Connect Database Engine
+                Establish Database Link
               </button>
             </div>
             
-            <p className="mt-12 text-zinc-600 text-[10px] font-bold uppercase tracking-[0.2em]">
-              * Don't forget to create a public bucket named "media" in Supabase Storage.
+            <p className="mt-16 text-zinc-600 text-[10px] font-bold uppercase tracking-[0.3em]">
+              * Required: Storage Bucket named "media" set to PUBLIC status in Supabase.
             </p>
           </div>
         )}
