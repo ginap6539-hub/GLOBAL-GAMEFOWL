@@ -45,7 +45,11 @@ const Admin: React.FC<AdminProps> = ({ onLogout, onUpdate }) => {
       setSaveStatus(`${fieldName} ready.`);
       setTimeout(() => setSaveStatus(null), 3000);
     } catch (err: any) {
-      alert(`Upload Error: ${err.message}`);
+      if (err.message?.includes('Bucket not found')) {
+        alert("CRITICAL ERROR: 'media' bucket not found. Please go to the 'Engine Config' tab and follow the 'Storage Setup' instructions.");
+      } else {
+        alert(`Upload Error: ${err.message}`);
+      }
     } finally {
       setIsUploading(null);
     }
@@ -243,12 +247,41 @@ const Admin: React.FC<AdminProps> = ({ onLogout, onUpdate }) => {
               </div>
             </div>
 
-            <div className="w-full bg-zinc-900/40 rounded-[4rem] border border-red-600/20 p-12 md:p-20 max-w-5xl mx-auto">
+            {/* NEW: STORAGE SETUP GUIDE */}
+            <div className="w-full bg-zinc-900/40 rounded-[4rem] border border-red-600/40 p-12 md:p-20 max-w-5xl mx-auto shadow-3xl">
                <div className="flex flex-col md:flex-row gap-12 items-start">
                   <div className="flex-1">
-                    <h3 className="text-3xl font-oswald font-bold text-red-600 uppercase tracking-tighter mb-6">Initial SQL Setup</h3>
+                    <h3 className="text-3xl font-oswald font-bold text-red-600 uppercase tracking-tighter mb-6">1. Storage Setup (Fix "Bucket not found")</h3>
                     <p className="text-zinc-400 mb-8 leading-relaxed">
-                      Run this script in your <b>Supabase SQL Editor</b> to prepare your database for sync.
+                      To upload photos and videos, you <b>must</b> create a storage bucket in Supabase.
+                    </p>
+                    <ol className="space-y-4 text-xs font-black uppercase tracking-widest text-white">
+                      <li className="flex items-center gap-3"><span className="w-6 h-6 bg-red-600 rounded-full flex items-center justify-center text-[10px]">1</span> Open Supabase Dashboard</li>
+                      <li className="flex items-center gap-3"><span className="w-6 h-6 bg-red-600 rounded-full flex items-center justify-center text-[10px]">2</span> Click <b>Storage</b> in the left sidebar</li>
+                      <li className="flex items-center gap-3"><span className="w-6 h-6 bg-red-600 rounded-full flex items-center justify-center text-[10px]">3</span> Click <b>New Bucket</b></li>
+                      <li className="flex items-center gap-3"><span className="w-6 h-6 bg-red-600 rounded-full flex items-center justify-center text-[10px]">4</span> Name it: <span className="text-red-600 bg-black px-2 py-1 rounded">media</span></li>
+                      <li className="flex items-center gap-3 font-bold text-red-500"><span className="w-6 h-6 bg-red-600 rounded-full flex items-center justify-center text-[10px] text-white">5</span> Toggle <b>Public</b> to ON (Green)</li>
+                      <li className="flex items-center gap-3"><span className="w-6 h-6 bg-red-600 rounded-full flex items-center justify-center text-[10px]">6</span> Click <b>Save</b></li>
+                    </ol>
+                  </div>
+                  <div className="flex-1 w-full flex items-center justify-center bg-black/40 rounded-3xl p-10 border border-white/5">
+                      <div className="text-center">
+                        <div className="w-20 h-20 bg-zinc-800 rounded-2xl mx-auto mb-4 flex items-center justify-center text-red-600">
+                          <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                        </div>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Storage Ready Status</p>
+                        <p className="text-green-500 font-black text-xs mt-1">BUCKET: "media" (PUBLIC)</p>
+                      </div>
+                  </div>
+               </div>
+            </div>
+
+            <div className="w-full bg-zinc-900/40 rounded-[4rem] border border-white/5 p-12 md:p-20 max-w-5xl mx-auto shadow-xl">
+               <div className="flex flex-col md:flex-row gap-12 items-start">
+                  <div className="flex-1">
+                    <h3 className="text-3xl font-oswald font-bold text-white uppercase tracking-tighter mb-6">2. Database Initialization</h3>
+                    <p className="text-zinc-400 mb-8 leading-relaxed">
+                      Run this script in your <b>Supabase SQL Editor</b> to create the necessary tables for settings and leads.
                     </p>
                     <ol className="space-y-4 text-xs font-black uppercase tracking-widest text-zinc-500">
                       <li>1. Click "SQL Editor" in Supabase</li>
