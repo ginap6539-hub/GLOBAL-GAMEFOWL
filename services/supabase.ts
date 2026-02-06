@@ -3,15 +3,24 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { SiteContent, InvestorLead } from '../types';
 import { DEFAULT_CONTENT } from '../constants';
 
-const supabaseUrl = process.env.SUPABASE_URL || (window as any)._env_?.SUPABASE_URL || '';
-const supabaseKey = process.env.SUPABASE_ANON_KEY || (window as any)._env_?.SUPABASE_ANON_KEY || '';
+const getCredentials = () => {
+  const storedUrl = localStorage.getItem('ggbs_supabase_url');
+  const storedKey = localStorage.getItem('ggbs_supabase_key');
+  
+  return {
+    url: process.env.SUPABASE_URL || (window as any)._env_?.SUPABASE_URL || storedUrl || '',
+    key: process.env.SUPABASE_ANON_KEY || (window as any)._env_?.SUPABASE_ANON_KEY || storedKey || ''
+  };
+};
 
-export const supabase: SupabaseClient | null = (supabaseUrl && supabaseKey) 
-  ? createClient(supabaseUrl, supabaseKey) 
+const creds = getCredentials();
+
+export const supabase: SupabaseClient | null = (creds.url && creds.key) 
+  ? createClient(creds.url, creds.key) 
   : null;
 
 export const uploadFile = async (file: File): Promise<string> => {
-  if (!supabase) throw new Error("Supabase not initialized");
+  if (!supabase) throw new Error("Supabase not initialized. Please go to Admin -> Database Settings and enter your Supabase URL and Anon Key.");
   
   const fileExt = file.name.split('.').pop();
   const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
@@ -49,7 +58,7 @@ export const fetchSiteContent = async (): Promise<SiteContent> => {
 };
 
 export const updateSiteContent = async (content: SiteContent) => {
-  if (!supabase) return;
+  if (!supabase) throw new Error("Supabase not initialized");
   const payload = {
     logo_url: content.logoUrl,
     hero_video_url: content.heroVideoUrl,
