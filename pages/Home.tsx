@@ -15,7 +15,6 @@ const Home: React.FC<HomeProps> = ({ content }) => {
   const [formData, setFormData] = useState({ name: '', email: '', phone: '', message: '' });
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [activePopup, setActivePopup] = useState<string | null>(null);
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,7 +50,7 @@ const Home: React.FC<HomeProps> = ({ content }) => {
               {/* Dynamic Pop-up Details */}
               <div className="absolute -top-10 -left-10 bg-red-600 p-8 rounded-[2.5rem] shadow-3xl animate-bounce hover:animate-none cursor-help group/pop">
                 <span className="text-4xl font-oswald font-black leading-none">AI</span>
-                <div className="absolute top-0 left-full ml-4 w-48 bg-zinc-900 p-4 rounded-2xl opacity-0 group-hover/pop:opacity-100 transition-opacity border border-red-600 shadow-2xl pointer-events-none">
+                <div className="absolute top-0 left-full ml-4 w-48 bg-zinc-900 p-4 rounded-2xl opacity-0 group-hover/pop:opacity-100 transition-opacity border border-red-600 shadow-2xl pointer-events-none z-50">
                   <p className="text-[9px] font-black uppercase text-red-500 mb-1">Tracking Engine</p>
                   <p className="text-[11px] font-medium leading-tight">Proprietary AI determines hit impact and frequency in real-time.</p>
                 </div>
@@ -59,7 +58,7 @@ const Home: React.FC<HomeProps> = ({ content }) => {
 
               <div className="absolute -bottom-8 -right-8 bg-white text-black p-8 rounded-[2.5rem] shadow-3xl rotate-3 group-hover:rotate-0 transition-transform cursor-help group/pop2">
                 <p className="text-5xl font-oswald font-black leading-none uppercase">P2P</p>
-                <div className="absolute bottom-full right-0 mb-4 w-56 bg-zinc-900 text-white p-5 rounded-3xl opacity-0 group-hover/pop2:opacity-100 transition-opacity border border-white/20 shadow-2xl pointer-events-none">
+                <div className="absolute bottom-full right-0 mb-4 w-56 bg-zinc-900 text-white p-5 rounded-3xl opacity-0 group-hover/pop2:opacity-100 transition-opacity border border-white/20 shadow-2xl pointer-events-none z-50">
                   <p className="text-[9px] font-black uppercase text-zinc-500 mb-2">Network Security</p>
                   <p className="text-xs italic">"Unhackable frequency ensures zero betting manipulation."</p>
                 </div>
@@ -138,14 +137,14 @@ const Home: React.FC<HomeProps> = ({ content }) => {
                 
                 <div className="space-y-6">
                    <div className="flex items-center gap-6 p-8 bg-zinc-900/40 rounded-[2.5rem] border border-white/5 hover:border-red-600/50 transition-all group">
-                      <img src={content.evolutionImageUrl} className="w-20 h-20 rounded-2xl object-cover grayscale group-hover:grayscale-0 transition-all" />
+                      <img src={content.evolutionImageUrl} alt="Evolution" className="w-20 h-20 rounded-2xl object-cover grayscale group-hover:grayscale-0 transition-all" />
                       <div>
                         <h4 className="text-white font-bold uppercase tracking-widest text-sm">Mainstream Entry</h4>
                         <p className="text-zinc-500 text-xs">Facility Ready, Regulations Compliant.</p>
                       </div>
                    </div>
                    <div className="flex items-center gap-6 p-8 bg-zinc-900/40 rounded-[2.5rem] border border-white/5 hover:border-red-600/50 transition-all group">
-                      <img src={content.revenueImageUrl} className="w-20 h-20 rounded-2xl object-cover grayscale group-hover:grayscale-0 transition-all" />
+                      <img src={content.revenueImageUrl} alt="Revenue" className="w-20 h-20 rounded-2xl object-cover grayscale group-hover:grayscale-0 transition-all" />
                       <div>
                         <h4 className="text-white font-bold uppercase tracking-widest text-sm">Scale Readiness</h4>
                         <p className="text-zinc-500 text-xs">Targeting 250 Fights Per Day Globally.</p>
